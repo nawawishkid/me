@@ -46,7 +46,7 @@ const Heading = () => {
         }}
         className="opacity-0"
       >
-        I'm{" "}
+        I&apos;m{" "}
       </motion.span>
       <motion.span
         whileTap={{ scale: 0.95 }}
