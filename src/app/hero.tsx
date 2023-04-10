@@ -32,7 +32,7 @@ function Heading() {
         }}
         className="block opacity-0 absolute -left-1/2 w-full text-center"
       >
-        Hi, everyone!!!
+        Hi, there!!!
       </motion.span>
       <motion.span
         animate={{ opacity: [0, 1] }}
