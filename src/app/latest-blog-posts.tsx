@@ -44,6 +44,8 @@ async function getPosts() {
   try {
     const response = await notion.databases.query({
       database_id: "5d56f6caeb1e447db26faf98127f5552",
+      page_size: 10,
+      sorts: [{ property: "Created", direction: "descending" }],
     });
     const posts = (response.results as PageObjectResponse[]).map<BlogPost>(
       (page) => {
@@ -97,12 +99,9 @@ async function getPosts() {
 
 export default function LatestBlogPosts() {
   const posts = getPosts();
-
-  // console.log("posts: ", posts);
   /* @ts-expect-error Server Component */
   const content = <BlogPostList promise={posts} />;
 
-  // console.log("content: ", content);
   return (
     <div className="my-8 p-8 max-w-screen-lg flex items-center flex-col mx-auto">
       <h2 className="text-3xl mb-16">Blog Posts</h2>
@@ -129,14 +128,16 @@ async function BlogPostList({ promise }: { promise: Promise<BlogPost[]> }) {
             )}
             <div>
               <div className="mb-4">
-                <h3 className="text-2xl font-bold">{post.title}</h3>
-                <Link
+                <Link href={post.url} target="_blank" className="underline">
+                  <h3 className="text-2xl font-bold">{post.title}</h3>
+                </Link>
+                {/* <Link
                   href={post.url}
                   target="_blank"
                   className="underline text-slate-500"
                 >
                   <small>{post.url}</small>
-                </Link>
+                </Link> */}
               </div>
               <p>{post.description}</p>
               <div>
