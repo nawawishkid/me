@@ -98,7 +98,7 @@ async function BlogPost(props: Props) {
 
                 case "numbered_list_item":
                   elem = (
-                    <ol>
+                    <ol key={block.id}>
                       {block.numbered_list_item.rich_text.map(
                         (richText, idx) => (
                           <li key={idx}>
@@ -113,7 +113,7 @@ async function BlogPost(props: Props) {
 
                 case "bulleted_list_item":
                   elem = (
-                    <ul>
+                    <ul key={block.id}>
                       {block.bulleted_list_item.rich_text.map(
                         (richText, idx) => (
                           <li key={idx}>
@@ -127,10 +127,11 @@ async function BlogPost(props: Props) {
                   break;
 
                 case "divider":
-                  elem = <hr className="my-4" />;
+                  elem = <hr key={block.id} className="my-4" />;
                   break;
 
                 default:
+                  elem = "";
                   break;
               }
 

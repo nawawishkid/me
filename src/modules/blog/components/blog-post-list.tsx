@@ -8,8 +8,8 @@ export default async function BlogPostList() {
   return (
     <ul>
       {posts.map((post) => (
-        <li key={post.url} className="mb-4">
-          <div className="p-4 rounded-lg border flex items-start gap-4">
+        <li key={post.url} className="mb-8">
+          <div className="p-6 sm:p-8 rounded-lg border flex items-start gap-4">
             {post.coverImageUrl && (
               <Image
                 src={post.coverImageUrl}
@@ -20,8 +20,10 @@ export default async function BlogPostList() {
             )}
             <div>
               <div className="mb-4">
-                <Link href={post.url} className="underline">
-                  <h3 className="text-2xl font-bold">{post.title}</h3>
+                <Link href={post.url}>
+                  <h3 className="text-xl sm:text-2xl font-semibold">
+                    {post.title}
+                  </h3>
                 </Link>
               </div>
               <p>{post.description}</p>
@@ -31,7 +33,7 @@ export default async function BlogPostList() {
                     <li key={topic.id}>
                       <Link
                         href={topic.url}
-                        className="rounded p-1 text-xs"
+                        className="rounded p-1 text-xs no-underline"
                         style={{
                           backgroundColor: getTopicBgColor(topic.color),
                           color: getTopicFgColor(topic.color),

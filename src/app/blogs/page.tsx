@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function BlogPostListPage() {
   return (
-    <main className="p-8">
+    <main className="p-8 max-w-screen-lg mx-auto">
       <h1 className="my-8 text-center text-3xl">My Blog Posts</h1>
       <Suspense fallback={"Loading..."}>
         {/* @ts-expect-error Server Component */}

@@ -1,3 +1,4 @@
+import SiteNotice, { SiteNoticeProvider } from "@/components/site-notice";
 import "./globals.css";
 
 export const metadata = {
@@ -12,7 +13,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <SiteNoticeProvider isOpen={true}>
+          <SiteNotice />
+          {children}
+        </SiteNoticeProvider>
+      </body>
     </html>
   );
 }
