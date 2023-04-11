@@ -28,15 +28,18 @@ const defaultParams: QueryDatabaseParameters = {
   sorts: [{ property: "Created", direction: "descending" }],
 };
 
+const getNotionClient = () =>
+  new Client({
+    auth: process.env.NOTION_SECRET_KEY,
+  });
+
 export async function findBlogPosts(
   params: Omit<
     QueryDatabaseParameters,
     "database_id" | "filter_properties"
   > = {}
 ) {
-  const notion = new Client({
-    auth: process.env.NOTION_SECRET_KEY,
-  });
+  const notion = getNotionClient();
 
   try {
     const response = await notion.databases.query({
@@ -44,45 +47,7 @@ export async function findBlogPosts(
       ...params,
     });
     const posts = (response.results as PageObjectResponse[]).map<BlogPost>(
-      (page) => {
-        let title: string = "";
-        let coverImageUrl: string | undefined = undefined;
-        let path = new URL(page.url).pathname;
-        let topics: BlogPostTopic[] = [];
-
-        const titleProperty = page.properties["Title"];
-
-        if (titleProperty.type === "title") {
-          title = titleProperty.title[0].plain_text;
-        }
-
-        if (page.cover) {
-          if (page.cover.type === "external") {
-            coverImageUrl = page.cover.external.url;
-          } else if (page.cover.type === "file") {
-            coverImageUrl = page.cover.file.url;
-          } else {
-            coverImageUrl = "";
-          }
-        }
-
-        const topicsProperty = page.properties["Topics"];
-
-        if (topicsProperty.type === "multi_select") {
-          topics = topicsProperty.multi_select.map((topic) => ({
-            ...topic,
-            url: `/blogs?tag=${topic.name}`,
-          }));
-        }
-
-        return {
-          title,
-          coverImageUrl,
-          description: "Lorem ipsum dolor sit amet",
-          url: `/blogs${path}`,
-          topics,
-        };
-      }
+      notionPageToBlogPost
     );
 
     return posts;
@@ -93,5 +58,67 @@ export async function findBlogPosts(
   }
 }
 
+export async function findOnePostById(
+  postId: string
+): Promise<BlogPost | null> {
+  const notion = getNotionClient();
+
+  try {
+    const notionPage = (await notion.pages.retrieve({
+      page_id: postId,
+    })) as PageObjectResponse;
+
+    if (!notionPage) {
+      return null;
+    }
+
+    return notionPageToBlogPost(notionPage);
+  } catch (e) {
+    console.error(e);
+
+    return null;
+  }
+}
+
 export const getTopicBgColor = (color: string) => notionBgColorHex[color];
 export const getTopicFgColor = (color: string) => notionFgColorHex[color];
+
+function notionPageToBlogPost(page: PageObjectResponse): BlogPost {
+  let title: string = "";
+  let coverImageUrl: string | undefined = undefined;
+  let path = new URL(page.url).pathname;
+  let topics: BlogPostTopic[] = [];
+
+  const titleProperty = page.properties["Title"];
+
+  if (titleProperty.type === "title") {
+    title = titleProperty.title[0].plain_text;
+  }
+
+  if (page.cover) {
+    if (page.cover.type === "external") {
+      coverImageUrl = page.cover.external.url;
+    } else if (page.cover.type === "file") {
+      coverImageUrl = page.cover.file.url;
+    } else {
+      coverImageUrl = "";
+    }
+  }
+
+  const topicsProperty = page.properties["Topics"];
+
+  if (topicsProperty.type === "multi_select") {
+    topics = topicsProperty.multi_select.map((topic) => ({
+      ...topic,
+      url: `/blogs?tag=${topic.name}`,
+    }));
+  }
+
+  return {
+    title,
+    coverImageUrl,
+    description: "Lorem ipsum dolor sit amet",
+    url: `/blogs${path}`,
+    topics,
+  };
+}

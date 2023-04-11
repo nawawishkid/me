@@ -20,7 +20,7 @@ export default async function BlogPostList() {
             )}
             <div>
               <div className="mb-4">
-                <Link href={post.url} target="_blank" className="underline">
+                <Link href={post.url} className="underline">
                   <h3 className="text-2xl font-bold">{post.title}</h3>
                 </Link>
               </div>
