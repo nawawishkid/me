@@ -1,9 +1,12 @@
 import { Client } from "@notionhq/client";
 import {
+  BlockObjectResponse,
   PageObjectResponse,
   QueryDatabaseParameters,
+  RichTextItemResponse,
 } from "@notionhq/client/build/src/api-endpoints";
-import { BlogPost, BlogPostTopic } from "../types";
+import { BlogPost, BlogPostContent, BlogPostTopic } from "../types";
+import { ReactNode, createElement } from "react";
 
 const notionBgColorHex: Record<string, string> = {
   red: "#ffe2dd",
@@ -47,7 +50,7 @@ export async function findBlogPosts(
       ...params,
     });
     const posts = (response.results as PageObjectResponse[]).map<BlogPost>(
-      notionPageToBlogPost
+      (page) => notionPageToBlogPost(page)
     );
 
     return posts;
@@ -64,15 +67,18 @@ export async function findOnePostById(
   const notion = getNotionClient();
 
   try {
-    const notionPage = (await notion.pages.retrieve({
-      page_id: postId,
-    })) as PageObjectResponse;
+    const [notionPageResponse, pageBlocks] = (await Promise.all([
+      notion.pages.retrieve({
+        page_id: postId,
+      }),
+      notion.blocks.children
+        .list({
+          block_id: postId,
+        })
+        .then((res) => res.results as BlockObjectResponse[]),
+    ])) as [PageObjectResponse, BlockObjectResponse[]];
 
-    if (!notionPage) {
-      return null;
-    }
-
-    return notionPageToBlogPost(notionPage);
+    return notionPageToBlogPost(notionPageResponse, pageBlocks);
   } catch (e) {
     console.error(e);
 
@@ -83,7 +89,10 @@ export async function findOnePostById(
 export const getTopicBgColor = (color: string) => notionBgColorHex[color];
 export const getTopicFgColor = (color: string) => notionFgColorHex[color];
 
-function notionPageToBlogPost(page: PageObjectResponse): BlogPost {
+function notionPageToBlogPost(
+  page: PageObjectResponse,
+  content?: BlogPostContent
+): BlogPost {
   let title: string = "";
   let coverImageUrl: string | undefined = undefined;
   let path = new URL(page.url).pathname;
@@ -120,5 +129,67 @@ function notionPageToBlogPost(page: PageObjectResponse): BlogPost {
     description: "Lorem ipsum dolor sit amet",
     url: `/blogs${path}`,
     topics,
+    content,
   };
 }
+
+export const notionRichTextToReactNode = (
+  richText: RichTextItemResponse
+): ReactNode => {
+  // console.log("richText: ", richText);
+  const { type, annotations, plain_text } = richText;
+  let node: ReactNode;
+
+  if (type === "text") {
+    const {
+      text: { link },
+    } = richText;
+
+    for (const key in annotations) {
+      const annotation = key as keyof RichTextItemResponse["annotations"];
+
+      if (
+        typeof annotations[annotation] !== "boolean" ||
+        annotations[annotation] === false
+      ) {
+        continue;
+      }
+
+      const child = node ? node : plain_text;
+
+      switch (annotation as keyof RichTextItemResponse["annotations"]) {
+        case "bold":
+          node = createElement("b", {}, child);
+          break;
+
+        case "code":
+          node = createElement("code", {}, child);
+          break;
+
+        case "italic":
+          node = createElement("i", {}, child);
+          break;
+
+        case "strikethrough":
+          node = createElement("s", {}, child);
+          break;
+
+        case "underline":
+          node = createElement("u", {}, child);
+          break;
+
+        default:
+          node = child;
+          break;
+      }
+    }
+
+    if (link && link.url) {
+      const child = node ? node : plain_text;
+
+      node = createElement("a", { href: link.url }, child);
+    }
+  }
+
+  return node || plain_text;
+};

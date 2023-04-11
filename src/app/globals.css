@@ -7,6 +7,14 @@ body {
   @apply text-gray-800;
 }
 
+a {
+  @apply underline;
+}
+
+code {
+  @apply bg-gray-100 py-1 px-2 rounded text-red-500;
+}
+
 /* :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
