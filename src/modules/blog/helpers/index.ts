@@ -119,7 +119,7 @@ function notionPageToBlogPost(
   if (topicsProperty.type === "multi_select") {
     topics = topicsProperty.multi_select.map((topic) => ({
       ...topic,
-      url: `/blogs?tag=${topic.name}`,
+      url: `/blogs?tag=${encodeURIComponent(topic.name)}`,
     }));
   }
 

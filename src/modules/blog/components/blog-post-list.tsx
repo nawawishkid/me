@@ -1,9 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { findBlogPosts, getTopicBgColor, getTopicFgColor } from "../helpers";
+import { QueryDatabaseParameters } from "@notionhq/client/build/src/api-endpoints";
 
-export default async function BlogPostList() {
-  const posts = await findBlogPosts();
+export default async function BlogPostList(
+  params?: Omit<QueryDatabaseParameters, "database_id" | "filter_properties">
+) {
+  const posts = await findBlogPosts(params);
 
   return (
     <ul>

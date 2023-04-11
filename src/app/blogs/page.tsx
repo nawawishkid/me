@@ -1,4 +1,5 @@
 import BlogPostList from "@/modules/blog/components/blog-post-list";
+import { QueryDatabaseParameters } from "@notionhq/client/build/src/api-endpoints";
 import { Suspense } from "react";
 
 export const metadata = {
@@ -6,13 +7,34 @@ export const metadata = {
   description: "Blog posts written by Nawawishkid 🥰",
 };
 
-export default function BlogPostListPage() {
+export default function BlogPostListPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
+  console.log("tag: ", searchParams.tag);
+  const { tag } = searchParams;
+  let filter: QueryDatabaseParameters["filter"];
+
+  if (tag) {
+    if (Array.isArray(tag)) {
+      filter = {
+        or: tag.map((t) => ({
+          property: "Topics",
+          multi_select: { contains: t },
+        })),
+      };
+    } else {
+      filter = { property: "Topics", multi_select: { contains: tag } };
+    }
+  }
+
   return (
     <main className="p-8 max-w-screen-lg mx-auto">
       <h1 className="my-8 text-center text-3xl">My Blog Posts</h1>
       <Suspense fallback={"Loading..."}>
         {/* @ts-expect-error Server Component */}
-        <BlogPostList />
+        <BlogPostList filter={filter} />
       </Suspense>
     </main>
   );
