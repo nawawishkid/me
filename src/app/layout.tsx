@@ -1,5 +1,7 @@
 import SiteNotice, { SiteNoticeProvider } from "@/components/site-notice";
 import "./globals.css";
+import AL from "./blogs/al";
+import Animatable from "./blogs/[slug]/animatable";
 
 export const metadata = {
   title: "Nawawishkid 🥰",
@@ -16,7 +18,9 @@ export default function RootLayout({
       <body>
         <SiteNoticeProvider isOpen={true}>
           <SiteNotice />
-          {children}
+          <AL>
+            <Animatable>{children}</Animatable>
+          </AL>
         </SiteNoticeProvider>
       </body>
     </html>

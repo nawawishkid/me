@@ -4,8 +4,9 @@ import {
 } from "@/modules/blog/helpers";
 import { BlockObjectResponse } from "@notionhq/client/build/src/api-endpoints";
 import type { Metadata } from "next";
-import { ReactNode, Suspense, cache } from "react";
+import { ReactNode, cache } from "react";
 import CodeBlock from "./code-block";
+import Animatable from "./animatable";
 
 interface Props {
   params: { slug: string };
@@ -45,18 +46,16 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   }
 }
 
-export default function SingleBlogPostPage(props: Props) {
-  return (
-    <main className="p-8">
-      <Suspense fallback={"Loading..."}>
-        {/* @ts-expect-error Server Component */}
-        <BlogPost {...props} />
-      </Suspense>
-    </main>
-  );
-}
+// export default function SingleBlogPostPage(props: Props) {
+//   return (
+//     <>
+//       {/* @ts-expect-error Server Component */}
+//       <BlogPost {...props} />
+//     </>
+//   );
+// }
 
-async function BlogPost(props: Props) {
+export default async function BlogPost(props: Props) {
   const post = await findPostFromProps(props);
   let content: ReactNode;
 
@@ -143,5 +142,5 @@ async function BlogPost(props: Props) {
     );
   }
 
-  return <>{content}</>;
+  return <Animatable>{content}</Animatable>;
 }

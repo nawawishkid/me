@@ -1,6 +1,6 @@
 import BlogPostList from "@/modules/blog/components/blog-post-list";
 import { QueryDatabaseParameters } from "@notionhq/client/build/src/api-endpoints";
-import { Suspense } from "react";
+import Animatable from "./[slug]/animatable";
 
 export const metadata = {
   title: "Blog Posts | Nawawishkid 🥰",
@@ -30,12 +30,12 @@ export default function BlogPostListPage({
   }
 
   return (
-    <main className="p-8 max-w-screen-lg mx-auto">
+    <>
       <h1 className="my-8 text-center text-3xl">My Blog Posts</h1>
-      <Suspense fallback={"Loading..."}>
+      <Animatable>
         {/* @ts-expect-error Server Component */}
         <BlogPostList filter={filter} />
-      </Suspense>
-    </main>
+      </Animatable>
+    </>
   );
 }
