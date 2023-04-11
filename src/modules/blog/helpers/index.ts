@@ -28,7 +28,7 @@ const defaultParams: QueryDatabaseParameters = {
   sorts: [{ property: "Created", direction: "descending" }],
 };
 
-export async function getPosts(
+export async function findBlogPosts(
   params: Omit<
     QueryDatabaseParameters,
     "database_id" | "filter_properties"

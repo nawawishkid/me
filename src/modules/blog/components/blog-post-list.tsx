@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getPosts, getTopicBgColor, getTopicFgColor } from "../helpers";
+import { findBlogPosts, getTopicBgColor, getTopicFgColor } from "../helpers";
 
 export default async function BlogPostList() {
-  const posts = await getPosts();
+  const posts = await findBlogPosts();
 
   return (
     <ul>
