@@ -1,12 +1,14 @@
 import { Client } from "@notionhq/client";
 import {
   BlockObjectResponse,
+  GetBlockResponse,
   PageObjectResponse,
   QueryDatabaseParameters,
   RichTextItemResponse,
 } from "@notionhq/client/build/src/api-endpoints";
 import { BlogPost, BlogPostContent, BlogPostTopic } from "../types";
 import { ReactNode, createElement } from "react";
+import CodeBlock from "@/components/code-block";
 
 const notionBgColorHex: Record<string, string> = {
   red: "#ffe2dd",
@@ -191,9 +193,9 @@ export const notionRichTextToReactNode = (
 
       node = createElement(
         "a",
-        { href: link.url, key: componentKey },
+        { href: link.url, target: "_blank", key: componentKey },
         child
-      ).key;
+      );
     }
   }
 
@@ -208,4 +210,128 @@ function getDatbaseId(): string {
   throw new Error(
     "NOTION_DATABASE_ID_FOR_BLOG_POSTS environment variable is required"
   );
+}
+
+interface ListBlockInfo {
+  index: number;
+  nodes: ReactNode[];
+  type: "ul" | "ol";
+}
+
+export function notionBlocksToReactNodes(
+  blocks: GetBlockResponse[]
+): ReactNode[] {
+  const listBlockInfoMap: Record<string, ListBlockInfo> = {};
+  let currentListBlockIndex: number | null = null;
+
+  // 1. Turn Notion Blocks to ReactNode[], excluding list item blocks.
+  // Group related list item blocks together. We'll create a parent for them later.
+  const nodes = blocks.reduce((arr, _block, idx) => {
+    const block = _block as BlockObjectResponse;
+
+    if (
+      block.type === "bulleted_list_item" ||
+      block.type === "numbered_list_item"
+    ) {
+      const type = block.type === "bulleted_list_item" ? "ul" : "ol";
+
+      if (
+        currentListBlockIndex === null || // first list block
+        !listBlockInfoMap[currentListBlockIndex] ||
+        listBlockInfoMap[currentListBlockIndex].type !== type //  found a contiguous list item but has different type
+      ) {
+        currentListBlockIndex = idx;
+        listBlockInfoMap[currentListBlockIndex] = {
+          index: currentListBlockIndex,
+          nodes: [],
+          type,
+        };
+      }
+
+      listBlockInfoMap[currentListBlockIndex!].nodes.push(
+        notionBlockToReactNode(block)
+      );
+
+      return arr;
+    } else {
+      // Reset current list block info
+      if (currentListBlockIndex !== null) {
+        currentListBlockIndex = null;
+      }
+    }
+
+    arr.push(notionBlockToReactNode(block));
+
+    return arr;
+  }, [] as ReactNode[]);
+
+  // 2. Create a list parent for the grouped list item nodes
+  // then insert it back to the nodes array at its original block position
+  for (const idx in listBlockInfoMap) {
+    const blockInfo = listBlockInfoMap[idx];
+
+    nodes.splice(
+      blockInfo.index,
+      0,
+      createElement(blockInfo.type, { key: `list-${idx}` }, blockInfo.nodes)
+    );
+  }
+
+  return nodes;
+}
+
+export function notionBlockToReactNode(_block: GetBlockResponse): ReactNode {
+  // console.log("block: ", _block);
+  const block = _block as BlockObjectResponse;
+  // let elem: ReactNode;
+  let tag: any;
+  const props: Record<string, any> = { key: block.id };
+  let children: any[] | undefined;
+
+  switch (block.type) {
+    case "heading_1":
+      tag = "h1";
+      children = block.heading_1.rich_text.map(notionRichTextToReactNode);
+      break;
+
+    case "heading_2":
+      tag = "h2";
+      children = block.heading_2.rich_text.map(notionRichTextToReactNode);
+      break;
+
+    case "heading_3":
+      tag = "h3";
+      children = block.heading_3.rich_text.map(notionRichTextToReactNode);
+      break;
+
+    case "paragraph":
+      tag = "p";
+      children = block.paragraph.rich_text.map(notionRichTextToReactNode);
+      break;
+
+    case "code":
+      tag = CodeBlock;
+      props.language = block.code.language;
+      props.className = "my-4";
+      children = block.code.rich_text.map(notionRichTextToReactNode);
+      break;
+
+    case "bulleted_list_item":
+    case "numbered_list_item":
+      const item =
+        block.type === "bulleted_list_item"
+          ? block.bulleted_list_item
+          : block.numbered_list_item;
+
+      tag = "li";
+      children = item.rich_text.map(notionRichTextToReactNode);
+      break;
+
+    case "divider":
+      tag = "hr";
+      props.className = "my-4";
+      break;
+  }
+
+  return tag ? createElement(tag, props, children) : "";
 }

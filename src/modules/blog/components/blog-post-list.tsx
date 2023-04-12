@@ -33,7 +33,7 @@ export async function BlogPostListNoSuspense({ query, mode = "grid" }: Props) {
             "sm:basis-[calc(50%_-_theme(spacing.8)_/_2)] lg:basis-[calc(33.33%_-_theme(spacing.8))]"
           }`}
         >
-          <Link href={post.url}>
+          <Link href={post.url} className="text-inherit hover:no-underline">
             <div className="p-6 sm:p-8 rounded-lg border flex items-start gap-4 hover:bg-slate-50">
               {/* {post.coverImageUrl && (
                 <Image
