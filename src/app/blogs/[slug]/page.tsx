@@ -6,19 +6,18 @@ import { BlockObjectResponse } from "@notionhq/client/build/src/api-endpoints";
 import type { Metadata } from "next";
 import { ReactNode, cache } from "react";
 import CodeBlock from "./code-block";
-import Animatable from "./animatable";
+import Animatable from "../../../components/animatable";
 
 interface Props {
   params: { slug: string };
 }
 
-const cachedFindOnePostById = cache(findOnePostById);
-const findPostFromProps = ({ params }: Props) => {
+const findPostFromProps = cache(({ params }: Props) => {
   const splitted = params.slug.split("-");
   const postId = splitted[splitted.length - 1];
 
-  return cachedFindOnePostById(postId);
-};
+  return findOnePostById(postId);
+});
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   try {
@@ -45,15 +44,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     return {};
   }
 }
-
-// export default function SingleBlogPostPage(props: Props) {
-//   return (
-//     <>
-//       {/* @ts-expect-error Server Component */}
-//       <BlogPost {...props} />
-//     </>
-//   );
-// }
 
 export default async function BlogPost(props: Props) {
   const post = await findPostFromProps(props);

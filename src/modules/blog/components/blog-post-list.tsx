@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { findBlogPosts, getTopicBgColor, getTopicFgColor } from "../helpers";
 import { QueryDatabaseParameters } from "@notionhq/client/build/src/api-endpoints";
+import Animatable from "@/components/animatable";
 
 export default async function BlogPostList(
   params?: Omit<QueryDatabaseParameters, "database_id" | "filter_properties">
@@ -53,5 +54,27 @@ export default async function BlogPostList(
         </li>
       ))}
     </ul>
+  );
+}
+
+export function LoadingSkeleton() {
+  return (
+    <Animatable className="w-full max-w-screen-lg p-8">
+      {Array(3)
+        .fill(null)
+        .map((_, idx) => (
+          <div
+            key={idx}
+            className="p-6 sm:p-8 rounded-lg border flex items-start gap-4 bg-white mb-8"
+          >
+            <div className="flex-shrink-0 flex-grow basis-[100px] h-[100px] bg-slate-200 animate-pulse rounded"></div>
+            <div className="flex-1 basis-4/5">
+              <div className="mb-6 w-full h-8 bg-slate-200 animate-pulse rounded"></div>
+              <div className="mb-2 w-full h-4 bg-slate-200 animate-pulse rounded"></div>
+              <div className="w-full h-4 bg-slate-200 animate-pulse rounded"></div>
+            </div>
+          </div>
+        ))}
+    </Animatable>
   );
 }
