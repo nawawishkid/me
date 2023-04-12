@@ -7,6 +7,9 @@ body {
   @apply text-gray-800;
 }
 
+article {
+  @apply break-words;
+}
 article h1 {
   @apply text-3xl md:text-4xl font-bold mb-8;
 }
