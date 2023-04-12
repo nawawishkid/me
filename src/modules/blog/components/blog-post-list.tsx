@@ -1,80 +1,136 @@
-import Image from "next/image";
 import Link from "next/link";
 import { findBlogPosts, getTopicBgColor, getTopicFgColor } from "../helpers";
 import { QueryDatabaseParameters } from "@notionhq/client/build/src/api-endpoints";
 import Animatable from "@/components/animatable";
+import { Suspense } from "react";
 
-export default async function BlogPostList(
-  params?: Omit<QueryDatabaseParameters, "database_id" | "filter_properties">
-) {
-  const posts = await findBlogPosts(params);
+type DisplayMode = "row" | "grid";
+interface Props {
+  query?: Omit<QueryDatabaseParameters, "database_id" | "filter_properties">;
+  mode?: DisplayMode;
+}
+
+export default function BlogPostList({ query, mode = "grid" }: Props) {
+  return (
+    <Suspense fallback={<LoadingSkeleton mode={mode} />}>
+      {/* @ts-expect-error Server Component */}
+      <BlogPostListNoSuspense query={query} />
+    </Suspense>
+  );
+}
+
+export async function BlogPostListNoSuspense({ query, mode = "grid" }: Props) {
+  const posts = await findBlogPosts(query);
+  const isGrid = mode === "grid";
 
   return (
-    <ul>
+    <ul className="flex flex-wrap gap-8 justify-center">
       {posts.map((post) => (
-        <li key={post.url} className="mb-8">
-          <div className="p-6 sm:p-8 rounded-lg border flex items-start gap-4">
-            {post.coverImageUrl && (
-              <Image
-                src={post.coverImageUrl}
-                width={64}
-                height={64}
-                alt={`${post.title}'s logo`}
-              />
-            )}
-            <div>
-              <div className="mb-4">
-                <Link href={post.url}>
-                  <h3 className="text-xl sm:text-2xl font-semibold">
+        <li
+          key={post.url}
+          className={`basis-full ${
+            isGrid &&
+            "sm:basis-[calc(50%_-_theme(spacing.8)_/_2)] lg:basis-[calc(33.33%_-_theme(spacing.8))]"
+          }`}
+        >
+          <Link href={post.url}>
+            <div className="p-6 sm:p-8 rounded-lg border flex items-start gap-4 hover:bg-slate-50">
+              {/* {post.coverImageUrl && (
+                <Image
+                  src={post.coverImageUrl}
+                  width={64}
+                  height={64}
+                  alt={`${post.title}'s logo`}
+                />
+              )} */}
+              <div
+                className={`flex flex-col ${
+                  isGrid && "sm:min-h-[200px] lg:min-h-[250px]"
+                }`}
+              >
+                <div className="flex-1">
+                  <h3 className="mb-4 text-xl sm:text-2xl font-semibold">
                     {post.title}
                   </h3>
-                </Link>
-              </div>
-              <p>{post.description}</p>
-              <div>
-                <ul className="flex gap-2 mt-4">
-                  {post.topics.map((topic) => (
-                    <li key={topic.id}>
-                      <Link
-                        href={topic.url}
-                        className="rounded p-1 text-xs no-underline"
-                        style={{
-                          backgroundColor: getTopicBgColor(topic.color),
-                          color: getTopicFgColor(topic.color),
-                        }}
-                      >
-                        {topic.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+                  <p>{post.description}</p>
+                </div>
+                <div className="flex-1 flex items-end">
+                  <ul className="flex gap-2 mt-4">
+                    {post.topics.map((topic) => (
+                      <li key={topic.id}>
+                        <span
+                          className="rounded p-1 text-xs no-underline"
+                          style={{
+                            backgroundColor: getTopicBgColor(topic.color),
+                            color: getTopicFgColor(topic.color),
+                          }}
+                        >
+                          {topic.name}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
+          </Link>
         </li>
       ))}
     </ul>
   );
 }
 
-export function LoadingSkeleton() {
+export function LoadingSkeleton({ mode = "grid" }: { mode?: DisplayMode }) {
+  const isGrid = mode === "grid";
+
   return (
-    <Animatable className="w-full max-w-screen-lg p-8">
-      {Array(3)
-        .fill(null)
-        .map((_, idx) => (
-          <div
-            key={idx}
-            className="p-6 sm:p-8 rounded-lg border flex items-start gap-4 bg-white mb-8"
-          >
-            <div className="flex-shrink-0 flex-grow basis-[100px] h-[100px] bg-slate-200 animate-pulse rounded"></div>
-            <div className="flex-1 basis-4/5">
-              <div className="mb-6 w-full h-8 bg-slate-200 animate-pulse rounded"></div>
-              <div className="mb-2 w-full h-4 bg-slate-200 animate-pulse rounded"></div>
-              <div className="w-full h-4 bg-slate-200 animate-pulse rounded"></div>
-            </div>
-          </div>
-        ))}
+    <Animatable className="w-full max-w-screen-lg">
+      {
+        <ul className="flex flex-wrap gap-8 justify-center">
+          {Array(isGrid ? 5 : 3)
+            .fill(null)
+            .map((_, idx) => (
+              <li
+                key={idx}
+                className={`basis-full ${
+                  isGrid &&
+                  "sm:basis-[calc(50%_-_theme(spacing.8)_/_2)] lg:basis-[calc(33.33%_-_theme(spacing.8))]"
+                }`}
+              >
+                <div className="p-6 sm:p-8 rounded-lg border flex items-start gap-4">
+                  {/* {post.coverImageUrl && (
+                      <Image
+                        src={post.coverImageUrl}
+                        width={64}
+                        height={64}
+                        alt={`${post.title}'s logo`}
+                      />
+                    )} */}
+                  <div
+                    className={`flex w-full flex-col ${
+                      isGrid && "sm:min-h-[200px] lg:min-h-[250px]"
+                    }`}
+                  >
+                    <div className="flex-1">
+                      <div className="mb-4 w-full h-8 skeleton"></div>
+                      <div className="h-4 mb-2 w-full skeleton"></div>
+                      <div className="h-4 w-full skeleton"></div>
+                    </div>
+                    <div className="flex-1 flex items-end">
+                      <ul className="flex gap-2 mt-4 w-full">
+                        {Array(3)
+                          .fill(null)
+                          .map((_, idx) => (
+                            <li key={idx} className="h-4 p-1 w-8 skeleton"></li>
+                          ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            ))}
+        </ul>
+      }
     </Animatable>
   );
 }

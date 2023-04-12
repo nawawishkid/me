@@ -24,12 +24,9 @@ export default function BlogPostListPage({
   return (
     <>
       <h1 className="my-8 text-center text-3xl">My Blog Posts</h1>
-      <Suspense fallback={<LoadingSkeleton />}>
-        <Animatable>
-          {/* @ts-expect-error Server Component */}
-          <BlogPostList filter={filter} />
-        </Animatable>
-      </Suspense>
+      <Animatable>
+        <BlogPostList query={{ filter }} />
+      </Animatable>
     </>
   );
 }

@@ -7,12 +7,16 @@ body {
   @apply text-gray-800;
 }
 
-a {
+/* a {
   @apply underline;
-}
+} */
 
 code {
   @apply bg-gray-100 py-1 px-2 rounded text-red-500;
+}
+
+.skeleton {
+  @apply bg-slate-200 animate-pulse rounded;
 }
 
 /* :root {
