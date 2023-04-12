@@ -53,7 +53,9 @@ export default async function BlogPost(props: Props) {
   } else {
     content = (
       <div>
-        <h1 className="text-center my-8 mb-16">{post.title}</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-center my-8 mb-16">
+          {post.title}
+        </h1>
         {post.content ? (
           <article className="max-w-screen-lg mx-auto py-8 my-8">
             <NotionBlocksHtml blocks={post.content} />
