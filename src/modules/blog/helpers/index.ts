@@ -135,7 +135,7 @@ function notionPageToBlogPost(
 
 export const notionRichTextToReactNode = (
   richText: RichTextItemResponse,
-  key?: number | string
+  componentKey?: number | string
 ): ReactNode => {
   // console.log("richText: ", richText);
   const { type, annotations, plain_text } = richText;
@@ -157,7 +157,7 @@ export const notionRichTextToReactNode = (
       }
 
       const child = node ? node : plain_text;
-      const props = key ? { key } : {};
+      const props = componentKey ? { key: componentKey } : {};
 
       switch (annotation as keyof RichTextItemResponse["annotations"]) {
         case "bold":
@@ -189,7 +189,11 @@ export const notionRichTextToReactNode = (
     if (link && link.url) {
       const child = node ? node : plain_text;
 
-      node = createElement("a", { href: link.url, key }, child).key;
+      node = createElement(
+        "a",
+        { href: link.url, key: componentKey },
+        child
+      ).key;
     }
   }
 
