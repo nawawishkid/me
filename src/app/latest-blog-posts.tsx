@@ -8,7 +8,7 @@ export default function LatestBlogPosts() {
       <h2 className="text-3xl mb-16">Latest Blog Posts</h2>
       <Suspense fallback={<div>Loading...</div>}>
         {/* @ts-expect-error Server Component */}
-        <BlogPostList />
+        <BlogPostList page_size={5} />
         <div className="flex justify-center">
           <Link href="/blogs" className="underline">
             View All

@@ -12,7 +12,6 @@ export default function BlogPostListPage({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  console.log("tag: ", searchParams.tag);
   const { tag } = searchParams;
   let filter: QueryDatabaseParameters["filter"];
 
