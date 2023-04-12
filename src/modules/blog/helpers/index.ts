@@ -26,7 +26,7 @@ const notionFgColorHex: Record<string, string> = {
 };
 
 const defaultParams: QueryDatabaseParameters = {
-  database_id: "5d56f6caeb1e447db26faf98127f5552",
+  database_id: getDatbaseId(),
   page_size: 10,
   sorts: [{ property: "Created", direction: "descending" }],
 };
@@ -199,3 +199,13 @@ export const notionRichTextToReactNode = (
 
   return node || plain_text;
 };
+
+function getDatbaseId(): string {
+  if (process.env.NOTION_DATABASE_ID_FOR_BLOG_POSTS) {
+    return process.env.NOTION_DATABASE_ID_FOR_BLOG_POSTS;
+  }
+
+  throw new Error(
+    "NOTION_DATABASE_ID_FOR_BLOG_POSTS environment variable is required"
+  );
+}
