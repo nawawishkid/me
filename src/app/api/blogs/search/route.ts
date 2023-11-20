@@ -10,7 +10,6 @@ const Body: z.ZodType<
 
 export async function POST(request: Request) {
   const body = Body.parse(await request.json());
-  console.log("body: ", body);
 
   try {
     const response = await findBlogPosts(body);

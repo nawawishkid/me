@@ -58,7 +58,6 @@ export async function findBlogPosts(
     "database_id" | "filter_properties"
   > = {}
 ): Promise<FindBlogPostsResponse> {
-  console.log("params: ", params);
   const notion = getNotionClient();
 
   try {
@@ -66,7 +65,6 @@ export async function findBlogPosts(
       ...defaultParams,
       ...params,
     });
-    console.log("response: ", response);
     const posts = (response.results as PageObjectResponse[]).map<BlogPost>(
       (page) => notionPageToBlogPost(page)
     );
@@ -126,8 +124,6 @@ function notionPageToBlogPost(
     topics: BlogPostTopic[] = [];
 
   const titleProperty = page.properties["Title"];
-
-  console.log("page: ", JSON.stringify(page, null, 2));
 
   if (titleProperty.type === "title" && titleProperty.title.length > 0) {
     title = titleProperty.title[0].plain_text;
@@ -238,10 +234,6 @@ export const notionRichTextToReactNode = (
 };
 
 function getDatabaseId(): string {
-  console.log(
-    "process.env.NOTION_DATABASE_ID_FOR_BLOG_POSTS: ",
-    process.env.NOTION_DATABASE_ID_FOR_BLOG_POSTS
-  );
   if (process.env.NOTION_DATABASE_ID_FOR_BLOG_POSTS) {
     return process.env.NOTION_DATABASE_ID_FOR_BLOG_POSTS;
   }
@@ -324,7 +316,6 @@ export function notionBlocksToReactNodes(
 }
 
 export function notionBlockToReactNode(_block: GetBlockResponse): ReactNode {
-  // console.log("block: ", _block);
   const block = _block as BlockObjectResponse;
   // let elem: ReactNode;
   let tag: any;
