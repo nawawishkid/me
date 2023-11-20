@@ -19,7 +19,7 @@ export default function LoadMoreButton({
     if (isLoading && typeof onLoading === "function") {
       onLoading();
     }
-  }, [isLoading]);
+  }, [isLoading, onLoading]);
 
   return (
     <button
