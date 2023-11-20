@@ -1,9 +1,6 @@
-import BlogPostList, {
-  LoadingSkeleton,
-} from "@/modules/blog/components/blog-post-list";
+import BlogPostList from "@/modules/blog/components/blog-post-list";
 import { QueryDatabaseParameters } from "@notionhq/client/build/src/api-endpoints";
 import Animatable from "../../components/animatable";
-import { Suspense } from "react";
 
 export const metadata = {
   title: "Blog Posts | Nawawishkid 🥰",
@@ -23,7 +20,7 @@ export default function BlogPostListPage({
 
   return (
     <>
-      <h1 className="my-8 text-center text-3xl">My Blog Posts</h1>
+      <h1 className="my-8 text-center text-3xl">Blogs</h1>
       <Animatable>
         <BlogPostList query={{ filter }} />
       </Animatable>

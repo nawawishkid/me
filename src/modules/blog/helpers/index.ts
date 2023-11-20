@@ -17,6 +17,10 @@ const notionBgColorHex: Record<string, string> = {
   purple: "#e8deee",
   pink: "#f5e0e9",
   green: "#dbeddb",
+  gray: "#5a5a5a",
+  brown: "#603b2c",
+  default: "#373737",
+  yellow: "#89632a",
 };
 const notionFgColorHex: Record<string, string> = {
   red: "rgb(93, 23, 21)",
@@ -25,10 +29,14 @@ const notionFgColorHex: Record<string, string> = {
   purple: "rgb(65, 36, 84)",
   pink: "rgb(76, 35, 55)",
   green: "rgb(28, 56, 41)",
+  gray: "#ffffffcd",
+  brown: "#ffffffcd",
+  default: "#ffffffcd",
+  yellow: "#ffffffcd",
 };
 
 const defaultParams: QueryDatabaseParameters = {
-  database_id: getDatbaseId(),
+  database_id: getDatabaseId(),
   page_size: 10,
   sorts: [{ property: "Created", direction: "descending" }],
 };
@@ -38,12 +46,19 @@ const getNotionClient = () =>
     auth: process.env.NOTION_SECRET_KEY,
   });
 
+export interface FindBlogPostsResponse {
+  posts: BlogPost[];
+  hasMore: boolean;
+  nextCursor: string | null;
+}
+
 export async function findBlogPosts(
   params: Omit<
     QueryDatabaseParameters,
     "database_id" | "filter_properties"
   > = {}
-) {
+): Promise<FindBlogPostsResponse> {
+  console.log("params: ", params);
   const notion = getNotionClient();
 
   try {
@@ -51,15 +66,24 @@ export async function findBlogPosts(
       ...defaultParams,
       ...params,
     });
+    console.log("response: ", response);
     const posts = (response.results as PageObjectResponse[]).map<BlogPost>(
       (page) => notionPageToBlogPost(page)
     );
 
-    return posts;
+    return {
+      posts,
+      hasMore: response.has_more,
+      nextCursor: response.next_cursor,
+    };
   } catch (e) {
     console.error(e);
 
-    return [];
+    return {
+      posts: [],
+      hasMore: false,
+      nextCursor: null,
+    };
   }
 }
 
@@ -95,14 +119,17 @@ function notionPageToBlogPost(
   page: PageObjectResponse,
   content?: BlogPostContent
 ): BlogPost {
-  let title: string = "";
-  let coverImageUrl: string | undefined = undefined;
-  let path = new URL(page.url).pathname;
-  let topics: BlogPostTopic[] = [];
+  let title: string = "",
+    description: string = "",
+    coverImageUrl: string | undefined = undefined,
+    path = new URL(page.url).pathname,
+    topics: BlogPostTopic[] = [];
 
   const titleProperty = page.properties["Title"];
 
-  if (titleProperty.type === "title") {
+  console.log("page: ", JSON.stringify(page, null, 2));
+
+  if (titleProperty.type === "title" && titleProperty.title.length > 0) {
     title = titleProperty.title[0].plain_text;
   }
 
@@ -125,10 +152,18 @@ function notionPageToBlogPost(
     }));
   }
 
+  const descriptionProperty = page.properties["Description"];
+
+  if (descriptionProperty.type === "rich_text") {
+    description = descriptionProperty.rich_text
+      .map((richText) => richText.plain_text)
+      .join("");
+  }
+
   return {
     title,
     coverImageUrl,
-    description: "Lorem ipsum dolor sit amet",
+    description,
     url: `/blogs${path}`,
     topics,
     content,
@@ -202,14 +237,22 @@ export const notionRichTextToReactNode = (
   return node || plain_text;
 };
 
-function getDatbaseId(): string {
+function getDatabaseId(): string {
+  console.log(
+    "process.env.NOTION_DATABASE_ID_FOR_BLOG_POSTS: ",
+    process.env.NOTION_DATABASE_ID_FOR_BLOG_POSTS
+  );
   if (process.env.NOTION_DATABASE_ID_FOR_BLOG_POSTS) {
     return process.env.NOTION_DATABASE_ID_FOR_BLOG_POSTS;
   }
 
-  throw new Error(
+  console.error(
     "NOTION_DATABASE_ID_FOR_BLOG_POSTS environment variable is required"
   );
+  return "";
+  // throw new Error(
+  //   "NOTION_DATABASE_ID_FOR_BLOG_POSTS environment variable is required"
+  // );
 }
 
 interface ListBlockInfo {

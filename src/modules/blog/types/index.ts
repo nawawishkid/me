@@ -1,6 +1,7 @@
 import {
   BlockObjectResponse,
   GetBlockResponse,
+  QueryDatabaseParameters,
 } from "@notionhq/client/build/src/api-endpoints";
 
 export interface BlogPostTopic {
@@ -20,3 +21,8 @@ export interface BlogPost {
   topics: BlogPostTopic[];
   content?: BlogPostContent;
 }
+
+export type BlogPostQuery = Omit<
+  QueryDatabaseParameters,
+  "database_id" | "filter_properties"
+>;
