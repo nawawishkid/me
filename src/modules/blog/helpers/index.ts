@@ -36,11 +36,11 @@ const notionFgColorHex: Record<string, string> = {
   yellow: "#ffffffcd",
 };
 
-const defaultParams: QueryDatabaseParameters = {
+const getDefaultParams = (): QueryDatabaseParameters => ({
   database_id: getDatabaseId(),
   page_size: 10,
   sorts: [{ property: "Created", direction: "descending" }],
-};
+});
 
 const getNotionClient = () =>
   new Client({
@@ -59,11 +59,17 @@ export async function findBlogPosts(
     "database_id" | "filter_properties"
   > = {}
 ): Promise<FindBlogPostsResponse> {
+  if (typeof window !== "undefined") {
+    console.log("findBlogPost(): window: ", window);
+  } else {
+    console.log("findBlogPost(): no window");
+  }
+
   const notion = getNotionClient();
 
   try {
     const response = await notion.databases.query({
-      ...defaultParams,
+      ...getDefaultParams(),
       ...params,
     });
     const posts = (response.results as PageObjectResponse[]).map<BlogPost>(

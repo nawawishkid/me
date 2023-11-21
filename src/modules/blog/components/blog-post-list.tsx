@@ -1,8 +1,5 @@
-import Link from "next/link";
-import { findBlogPosts, getTopicBgColor, getTopicFgColor } from "../helpers";
-import Animatable from "@/components/animatable";
+import { findBlogPosts } from "../helpers";
 import { Suspense } from "react";
-import LoadMoreButton from "./load-more-button";
 import { BlogPostQuery } from "../types";
 import BlogListClient from "./blog-list-client";
 import LoadingSkeleton from "./loading-skeleton";
