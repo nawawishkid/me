@@ -1,5 +1,4 @@
 import {
-  BlockObjectResponse,
   GetBlockResponse,
   QueryDatabaseParameters,
 } from "@notionhq/client/build/src/api-endpoints";

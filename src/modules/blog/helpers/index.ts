@@ -182,7 +182,6 @@ export const notionRichTextToReactNode = (
   richText: RichTextItemResponse,
   componentKey?: number | string
 ): ReactNode => {
-  // console.log("richText: ", richText);
   const { type, annotations, plain_text } = richText;
   let node: ReactNode;
 

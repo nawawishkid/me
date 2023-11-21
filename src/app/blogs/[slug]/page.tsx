@@ -29,7 +29,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       return {};
     }
 
-    const title = `${post.title} | Nawawishkid 🥰`;
+    const title = post.title;
 
     return {
       title,
@@ -85,7 +85,6 @@ export default async function BlogPost(props: Props) {
         {post.content ? (
           <article className="py-8 my-8">
             <NotionBlocksHtml blocks={post.content} />
-            {/* {post.content.map(notionBlockToReactNode)} */}
           </article>
         ) : null}
       </div>

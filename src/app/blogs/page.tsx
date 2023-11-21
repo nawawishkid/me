@@ -3,8 +3,8 @@ import { QueryDatabaseParameters } from "@notionhq/client/build/src/api-endpoint
 import Animatable from "../../components/animatable";
 
 export const metadata = {
-  title: "Blog Posts | Nawawishkid 🥰",
-  description: "Blog posts written by Nawawishkid 🥰",
+  title: "Blog Posts",
+  description: "Blog posts written by @nawawishkid",
 };
 
 interface SearchParams {
