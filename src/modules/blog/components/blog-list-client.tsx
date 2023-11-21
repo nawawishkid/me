@@ -8,6 +8,7 @@ import { getTopicBgColor, getTopicFgColor } from "../helpers";
 import LoadMoreButton from "./load-more-button";
 import LoadingSkeleton from "./loading-skeleton";
 import { FindBlogPostsResponse } from "../api/types";
+import Image from "next/image";
 
 type DisplayMode = "row" | "grid";
 interface Props {
@@ -39,17 +40,19 @@ export default function BlogListClient({
               "sm:basis-[calc(50%_-_theme(spacing.8)_/_2)] lg:basis-[calc(33.33%_-_theme(spacing.8))]"
             }`}
           >
-            <div className="p-6 sm:p-8 rounded-2xl flex items-start gap-4 bg-slate-50 hover:bg-white shadow-lg shadow-gray-300/30 hover:-translate-y-2 transition-all hover:shadow-green-300/30">
-              {/* {post.coverImageUrl && (
-                <Image
-                  src={post.coverImageUrl}
-                  width={64}
-                  height={64}
-                  alt={`${post.title}'s logo`}
-                />
-              )} */}
+            <div className="rounded-2xl flex flex-col gap-4 bg-slate-50 hover:bg-white shadow-lg shadow-gray-300/30 hover:-translate-y-2 transition-all hover:shadow-green-300/30">
+              {post.coverImageUrl && (
+                <div className="w-full min-h-[250px] relative rounded-tl-2xl rounded-tr-2xl overflow-hidden">
+                  <Image
+                    src={post.coverImageUrl}
+                    alt={post.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
               <div
-                className={`flex flex-col justify-between gap-4 ${
+                className={`px-6 pb-6 sm:px-8 sm:pb-8 flex flex-col justify-between gap-4 ${
                   isGrid && "sm:min-h-[200px] lg:min-h-[250px]"
                 }`}
               >
@@ -64,7 +67,6 @@ export default function BlogListClient({
                         {post.title}
                       </h3>
                     </Link>
-                    {/* <p>{post.description}</p> */}
                   </div>
                   <div className="flex items-center">
                     <ul className="flex gap-2 flex-wrap">
