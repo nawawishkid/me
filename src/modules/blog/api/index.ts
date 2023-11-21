@@ -4,9 +4,12 @@ import {
   QueryDatabaseParameters,
 } from "@notionhq/client/build/src/api-endpoints";
 import {
+  CachableFindBlogPostsResponse,
+  CachableFindOneBlogPostResponse,
   CacheStatus,
   FindBlogPostsResponse,
   FindOneBlogPostResponse,
+  WithCacheStatus,
 } from "./types";
 import { Client } from "@notionhq/client";
 import { BlogPost, BlogPostContent, BlogPostTopic } from "../types";
@@ -22,15 +25,15 @@ export async function findBlogPosts(
     QueryDatabaseParameters,
     "database_id" | "filter_properties"
   > = {}
-): Promise<FindBlogPostsResponse> {
-  const query = {
-    ...getDefaultParams(),
-    ...params,
-  };
-  const blogsResponseCacheKey = createFindBlogPostsResponseCacheKey(query);
-  const redis = getRedis();
+): Promise<CachableFindBlogPostsResponse> {
+  if (process.env.CACHE_NOTION_DATA === "true") {
+    const query = {
+      ...getDefaultParams(),
+      ...params,
+    };
+    const blogsResponseCacheKey = createFindBlogPostsResponseCacheKey(query);
+    const redis = getRedis();
 
-  if (redis) {
     try {
       const cachedResponse = await redis.get(blogsResponseCacheKey);
 
@@ -39,7 +42,10 @@ export async function findBlogPosts(
           `Successfully got cached ${blogsResponseCacheKey}: `,
           cachedResponse
         );
-        return { ...JSON.parse(cachedResponse), cacheStatus: CacheStatus.HIT };
+        return {
+          ...JSON.parse(cachedResponse),
+          cacheStatus: CacheStatus.HIT,
+        };
       }
     } catch (e) {
       if (e instanceof Error) {
@@ -48,7 +54,39 @@ export async function findBlogPosts(
         );
       }
     }
+
+    const response = await findBlogPostsFromNotion(params);
+
+    redis
+      .set(
+        blogsResponseCacheKey,
+        JSON.stringify(response),
+        "EX",
+        process.env.REDIS_CACHE_EXPIRATION_IN_SECONDS || 60 * 60 * 24
+      )
+      .then(() => console.log(`Successfully cached ${blogsResponseCacheKey}`))
+      .catch((e) =>
+        console.error(`Failed to cache ${blogsResponseCacheKey}: ${e}`)
+      );
+
+    return { ...response, cacheStatus: CacheStatus.MISS };
   }
+
+  const response = await findBlogPostsFromNotion(params);
+
+  return { ...response, cacheStatus: CacheStatus.MISS };
+}
+
+export async function findBlogPostsFromNotion(
+  params: Omit<
+    QueryDatabaseParameters,
+    "database_id" | "filter_properties"
+  > = {}
+): Promise<FindBlogPostsResponse> {
+  const query = {
+    ...getDefaultParams(),
+    ...params,
+  };
 
   const notion = getNotionClient();
 
@@ -62,22 +100,7 @@ export async function findBlogPosts(
       posts,
       hasMore: response.has_more,
       nextCursor: response.next_cursor,
-      cacheStatus: CacheStatus.MISS,
     };
-
-    if (redis) {
-      redis
-        .set(
-          blogsResponseCacheKey,
-          JSON.stringify(findBlogsResponse),
-          "EX",
-          60 * 60 * 24
-        )
-        .then(() => console.log(`Successfully cached ${blogsResponseCacheKey}`))
-        .catch((e) =>
-          console.error(`Failed to cache ${blogsResponseCacheKey}: ${e}`)
-        );
-    }
 
     return findBlogsResponse;
   } catch (e) {
@@ -87,7 +110,6 @@ export async function findBlogPosts(
       posts: [],
       hasMore: false,
       nextCursor: null,
-      cacheStatus: CacheStatus.MISS,
     };
   }
 }
@@ -98,29 +120,58 @@ function createFindOnePostByIdResponseCacheKey(id: string) {
 
 export async function findOnePostById(
   postId: string
-): Promise<FindOneBlogPostResponse> {
-  const blogResponseCacheKey = createFindOnePostByIdResponseCacheKey(postId);
-  const redis = getRedis();
+): Promise<CachableFindOneBlogPostResponse> {
+  if (process.env.CACHE_NOTION_DATA === "true") {
+    const oneBlogResponseCacheKey =
+      createFindOnePostByIdResponseCacheKey(postId);
+    const redis = getRedis();
 
-  if (redis) {
     try {
-      const cachedResponse = await redis.get(blogResponseCacheKey);
+      const cachedResponse = await redis.get(oneBlogResponseCacheKey);
 
       if (cachedResponse) {
         console.log(
-          `Successfully got cached ${blogResponseCacheKey}: `,
+          `Successfully got cached ${oneBlogResponseCacheKey}: `,
           cachedResponse
         );
-        return { ...JSON.parse(cachedResponse), cacheStatus: CacheStatus.HIT };
+        return {
+          ...JSON.parse(cachedResponse),
+          cacheStatus: CacheStatus.HIT,
+        };
       }
     } catch (e) {
       if (e instanceof Error) {
         console.error(
-          `Failed to get cached ${blogResponseCacheKey}: ${e.message}`
+          `Failed to get cached ${oneBlogResponseCacheKey}: ${e.message}`
         );
       }
     }
+
+    const response = await findOnePostByIdFromNotion(postId);
+
+    redis
+      .set(
+        oneBlogResponseCacheKey,
+        JSON.stringify(response),
+        "EX",
+        process.env.REDIS_CACHE_EXPIRATION_IN_SECONDS || 60 * 60 * 24
+      )
+      .then(() => console.log(`Successfully cached ${oneBlogResponseCacheKey}`))
+      .catch((e) =>
+        console.error(`Failed to cache ${oneBlogResponseCacheKey}: ${e}`)
+      );
+
+    return { ...response, cacheStatus: CacheStatus.MISS };
   }
+
+  const response = await findOnePostByIdFromNotion(postId);
+
+  return { ...response, cacheStatus: CacheStatus.MISS };
+}
+
+export async function findOnePostByIdFromNotion(
+  postId: string
+): Promise<FindOneBlogPostResponse> {
   const notion = getNotionClient();
 
   try {
@@ -134,26 +185,14 @@ export async function findOnePostById(
         })
         .then((res) => res.results as BlockObjectResponse[]),
     ])) as [PageObjectResponse, BlockObjectResponse[]];
-    const post = notionPageToBlogPost(notionPageResponse, pageBlocks);
-    const response: FindOneBlogPostResponse = {
-      post,
-      cacheStatus: CacheStatus.MISS,
+
+    return {
+      post: notionPageToBlogPost(notionPageResponse, pageBlocks),
     };
-
-    if (redis) {
-      redis
-        .set(blogResponseCacheKey, JSON.stringify(response), "EX", 60 * 60 * 24)
-        .then(() => console.log(`Successfully cached ${blogResponseCacheKey}`))
-        .catch((e) =>
-          console.error(`Failed to cache ${blogResponseCacheKey}: ${e}`)
-        );
-    }
-
-    return response;
   } catch (e) {
     console.error(e);
 
-    return { post: null, cacheStatus: CacheStatus.MISS };
+    return { post: null };
   }
 }
 
@@ -163,7 +202,10 @@ function notionPageToBlogPost(
 ): BlogPost {
   let title: string = "",
     description: string = "",
-    coverImageUrl: string | undefined = undefined,
+    coverImageUrl =
+      page.cover?.type === "external"
+        ? page.cover.external.url
+        : page.cover?.file.url,
     path = new URL(page.url).pathname,
     topics: BlogPostTopic[] = [],
     createdAt = "";

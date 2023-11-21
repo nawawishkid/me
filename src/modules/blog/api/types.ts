@@ -5,16 +5,22 @@ export enum CacheStatus {
   MISS = "MISS",
 }
 
-interface WithCacheStatus {
+export interface WithCacheStatus {
   cacheStatus: CacheStatus;
 }
 
-export interface FindBlogPostsResponse extends WithCacheStatus {
+export interface FindBlogPostsResponse {
   posts: BlogPost[];
   hasMore: boolean;
   nextCursor: string | null;
 }
 
-export interface FindOneBlogPostResponse extends WithCacheStatus {
+export type CachableFindBlogPostsResponse = FindBlogPostsResponse &
+  WithCacheStatus;
+
+export interface FindOneBlogPostResponse {
   post: BlogPost | null;
 }
+
+export type CachableFindOneBlogPostResponse = FindOneBlogPostResponse &
+  WithCacheStatus;

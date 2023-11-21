@@ -31,7 +31,7 @@ export default function BlogPostListPage({
   }
 
   return (
-    <>
+    <div className="p-8">
       <h1 className="my-8 text-center text-3xl">Blogs</h1>
       <div className="flex max-w-screen-md mx-auto my-8">
         {filteredTopics.length > 0 && (
@@ -54,7 +54,7 @@ export default function BlogPostListPage({
       <Animatable>
         <BlogPostList query={{ filter }} />
       </Animatable>
-    </>
+    </div>
   );
 }
 
