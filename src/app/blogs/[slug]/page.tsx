@@ -9,6 +9,7 @@ import { ReactNode, cache } from "react";
 import Animatable from "../../../components/animatable";
 import { GetBlockResponse } from "@notionhq/client/build/src/api-endpoints";
 import Link from "next/link";
+import Breadcrumbs from "@/components/breadcrumbs";
 
 interface Props {
   params: { slug: string };
@@ -55,8 +56,9 @@ export default async function BlogPost(props: Props) {
     content = <h1>Post not found</h1>;
   } else {
     content = (
-      <div className="mx-auto max-w-screen-md">
-        <h1 className="text-3xl md:text-4xl font-bold text-center my-8 mb-16">
+      <div className="mx-auto max-w-screen-md pt-8">
+        <Breadcrumbs path="/blogs" />
+        <h1 className="text-3xl md:text-4xl font-bold text-center mb-16">
           {post.title}
         </h1>
         <small>{post.createdAt}</small>
