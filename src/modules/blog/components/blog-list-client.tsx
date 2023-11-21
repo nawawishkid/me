@@ -52,44 +52,46 @@ export default function BlogListClient({
                 />
               )} */}
               <div
-                className={`flex flex-col gap-4 ${
+                className={`flex flex-col justify-between gap-4 ${
                   isGrid && "sm:min-h-[200px] lg:min-h-[250px]"
                 }`}
               >
-                <div>
-                  <small>{post.createdAt}</small>
-                  <Link
-                    href={post.url}
-                    className="hover:no-underline transition-all duration-200 hover:[text-shadow:_0_0_2px_theme(colors.green.500)]"
-                  >
-                    <h3 className="text-xl sm:text-2xl font-semibold">
-                      {post.title}
-                    </h3>
-                  </Link>
-                  {/* <p>{post.description}</p> */}
-                </div>
-                <div className="flex items-center">
-                  <ul className="flex gap-2 flex-wrap">
-                    {post.topics.map((topic) => (
-                      <li
-                        key={topic.id}
-                        className="hover:-translate-y-1 hover:translate-x-1 transition-all"
-                      >
-                        <Link
-                          href={`/blogs?topic=${topic.name}`}
-                          className="rounded py-1 px-2 text-xs no-underline"
-                          style={{
-                            backgroundColor: getTopicBgColor(topic.color),
-                            color: getTopicFgColor(topic.color),
-                          }}
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <small>{post.createdAt}</small>
+                    <Link
+                      href={post.url}
+                      className="hover:no-underline transition-all duration-200 hover:[text-shadow:_0_0_2px_theme(colors.green.500)]"
+                    >
+                      <h3 className="text-xl sm:text-2xl font-semibold">
+                        {post.title}
+                      </h3>
+                    </Link>
+                    {/* <p>{post.description}</p> */}
+                  </div>
+                  <div className="flex items-center">
+                    <ul className="flex gap-2 flex-wrap">
+                      {post.topics.map((topic) => (
+                        <li
+                          key={topic.id}
+                          className="hover:-translate-y-1 hover:translate-x-1 transition-all"
                         >
-                          {topic.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
+                          <Link
+                            href={`/blogs?topic=${topic.name}`}
+                            className="rounded py-1 px-2 text-xs no-underline"
+                            style={{
+                              backgroundColor: getTopicBgColor(topic.color),
+                              color: getTopicFgColor(topic.color),
+                            }}
+                          >
+                            {topic.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <p>{post.description}</p>
                 </div>
-                <p>{post.description}</p>
                 <Link
                   href={post.url}
                   className="hover:underline font-bold text-blue-500"
