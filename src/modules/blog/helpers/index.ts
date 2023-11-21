@@ -357,7 +357,10 @@ export function notionBlockToReactNode(_block: GetBlockResponse): ReactNode {
 
     case "code":
       tag = CodeBlock;
-      props.language = block.code.language;
+      props.language =
+        block.code.language === "plain text"
+          ? "plaintext"
+          : block.code.language;
       props.className = "my-4";
       children = block.code.rich_text.map(notionRichTextToReactNode);
       break;
