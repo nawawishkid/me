@@ -1,5 +1,6 @@
 "use client";
 
+import { Bars3BottomRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -47,26 +48,31 @@ export default function Nav() {
   return (
     <>
       <button
-        className="border rouned-lg p-2 md:hidden"
+        className="p-2 md:hidden"
         onClick={() => setIsMenuOpen(!isMenuOpen)}
       >
-        {isMenuOpen ? "Close" : "Menu"}
+        {isMenuOpen ? (
+          <XMarkIcon className="w-8 h-8" />
+        ) : (
+          <Bars3BottomRightIcon className="w-8 h-8" />
+        )}
       </button>
       <nav
         className={`${
-          isMenuOpen ? "fixed" : "hidden"
-        } top-16 left-0 w-screen h-screen z-50 md:relative md:inline-block md:top-[unset] md:left-[unset] md:w-[unset] md:h-[unset] md:z-[unset] bg-slate-100`}
+          isMenuOpen ? "h-screen" : "h-0"
+        } bg-slate-50 overflow-hidden w-screen fixed top-16 left-0 z-50 md:relative md:inline-block md:top-[unset] md:left-[unset] md:w-[unset] md:h-full md:z-[unset] transition-all duration-500`}
       >
-        <ul className="flex flex-col items-start text-xl md:text-base md:flex-row md:items-center gap-4 p-8 md:p-0">
+        <ul className="py-8 flex flex-col items-start text-xl md:text-base md:flex-row md:items-center gap-4 md:p-0 h-full">
           {menus.map((menu) => (
             <Link
               key={menu.id}
               href={menu.path}
-              className={`p-2${
+              className={`px-8 py-2 md:p-2 w-full border-b-2 border-transparent md:h-full md:flex md:items-center md:justify-center transition-all duration-300${
                 pathname === menu.path
-                  ? " font-bold text-green-500 border-b-2 border-green-500"
-                  : ""
+                  ? " font-bold text-green-600 bg-green-100 md:border-green-500 md:bg-[unset]"
+                  : " border-transparent hover:text-bg-700 hover:bg-green-100"
               }`}
+              onClick={() => setIsMenuOpen(false)}
             >
               <li key={menu.id}>{menu.label}</li>
             </Link>
