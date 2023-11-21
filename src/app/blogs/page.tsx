@@ -17,7 +17,6 @@ export default function BlogPostListPage({
 }: {
   searchParams: SearchParams;
 }) {
-  console.log("searchParams: ", searchParams);
   const filter = searchParamsToFilter(searchParams);
   const filteredTopics: string[] = [];
 
