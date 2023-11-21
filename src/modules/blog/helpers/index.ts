@@ -9,6 +9,7 @@ import {
 import { BlogPost, BlogPostContent, BlogPostTopic } from "../types";
 import { ReactNode, createElement } from "react";
 import CodeBlock from "@/components/code-block";
+import { format, parse, parseISO } from "date-fns";
 
 const notionBgColorHex: Record<string, string> = {
   red: "#ffe2dd",
@@ -121,7 +122,8 @@ function notionPageToBlogPost(
     description: string = "",
     coverImageUrl: string | undefined = undefined,
     path = new URL(page.url).pathname,
-    topics: BlogPostTopic[] = [];
+    topics: BlogPostTopic[] = [],
+    createdAt = "";
 
   const titleProperty = page.properties["Title"];
 
@@ -156,6 +158,15 @@ function notionPageToBlogPost(
       .join("");
   }
 
+  const createdAtProperty = page.properties["Created"];
+
+  if (createdAtProperty.type === "created_time") {
+    createdAt = format(
+      parseISO(createdAtProperty.created_time),
+      "MMMM dd, yyyy"
+    );
+  }
+
   return {
     title,
     coverImageUrl,
@@ -163,6 +174,7 @@ function notionPageToBlogPost(
     url: `/blogs${path}`,
     topics,
     content,
+    createdAt,
   };
 }
 

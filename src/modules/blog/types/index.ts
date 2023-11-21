@@ -20,6 +20,7 @@ export interface BlogPost {
   url: string;
   topics: BlogPostTopic[];
   content?: BlogPostContent;
+  createdAt: string;
 }
 
 export type BlogPostQuery = Omit<

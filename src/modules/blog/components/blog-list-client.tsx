@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { BlogPost, BlogPostQuery } from "../types";
 import Link from "next/link";
+import { ArrowLongRightIcon } from "@heroicons/react/24/outline";
 import {
   FindBlogPostsResponse,
   getTopicBgColor,
@@ -41,9 +42,8 @@ export default function BlogListClient({
               "sm:basis-[calc(50%_-_theme(spacing.8)_/_2)] lg:basis-[calc(33.33%_-_theme(spacing.8))]"
             }`}
           >
-            <Link href={post.url} className="text-inherit hover:no-underline">
-              <div className="p-6 sm:p-8 rounded-2xl flex items-start gap-4 bg-slate-50 hover:bg-white shadow-lg shadow-gray-300/30 hover:-translate-y-2 transition-all">
-                {/* {post.coverImageUrl && (
+            <div className="p-6 sm:p-8 rounded-2xl flex items-start gap-4 bg-slate-50 hover:bg-white shadow-lg shadow-gray-300/30 hover:-translate-y-2 transition-all hover:shadow-green-300/30">
+              {/* {post.coverImageUrl && (
                 <Image
                   src={post.coverImageUrl}
                   width={64}
@@ -51,40 +51,54 @@ export default function BlogListClient({
                   alt={`${post.title}'s logo`}
                 />
               )} */}
-                <div
-                  className={`flex flex-col ${
-                    isGrid && "sm:min-h-[200px] lg:min-h-[250px]"
-                  }`}
-                >
-                  <div className="flex-1">
-                    <h3 className="mb-4 text-xl sm:text-2xl font-semibold">
+              <div
+                className={`flex flex-col gap-4 ${
+                  isGrid && "sm:min-h-[200px] lg:min-h-[250px]"
+                }`}
+              >
+                <div>
+                  <small>{post.createdAt}</small>
+                  <Link
+                    href={post.url}
+                    className="hover:no-underline transition-all duration-200 hover:[text-shadow:_0_0_2px_theme(colors.green.500)]"
+                  >
+                    <h3 className="text-xl sm:text-2xl font-semibold">
                       {post.title}
                     </h3>
-                    <p>{post.description}</p>
-                  </div>
-                  <div className="flex-1 flex items-end">
-                    <ul className="flex gap-2 flex-wrap mt-4">
-                      {post.topics.map((topic) => (
-                        <li
-                          key={topic.id}
-                          className="hover:-translate-y-1 hover:translate-x-1 transition-all"
-                        >
-                          <span
-                            className="rounded py-1 px-2 text-xs no-underline"
-                            style={{
-                              backgroundColor: getTopicBgColor(topic.color),
-                              color: getTopicFgColor(topic.color),
-                            }}
-                          >
-                            {topic.name}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  </Link>
+                  {/* <p>{post.description}</p> */}
                 </div>
+                <div className="flex items-center">
+                  <ul className="flex gap-2 flex-wrap">
+                    {post.topics.map((topic) => (
+                      <li
+                        key={topic.id}
+                        className="hover:-translate-y-1 hover:translate-x-1 transition-all"
+                      >
+                        <Link
+                          href={`/blogs?topic=${topic.name}`}
+                          className="rounded py-1 px-2 text-xs no-underline"
+                          style={{
+                            backgroundColor: getTopicBgColor(topic.color),
+                            color: getTopicFgColor(topic.color),
+                          }}
+                        >
+                          {topic.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <p>{post.description}</p>
+                <Link
+                  href={post.url}
+                  className="hover:underline font-bold text-blue-500"
+                >
+                  Read more
+                  <ArrowLongRightIcon className="w-4 h-4 inline ml-2" />
+                </Link>
               </div>
-            </Link>
+            </div>
           </li>
         ))}
       </ul>
