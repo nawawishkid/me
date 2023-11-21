@@ -74,7 +74,7 @@ export default function Nav() {
               }`}
               onClick={() => setIsMenuOpen(false)}
             >
-              <li key={menu.id}>{menu.label}</li>
+              <li>{menu.label}</li>
             </Link>
           ))}
         </ul>

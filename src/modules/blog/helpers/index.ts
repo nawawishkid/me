@@ -59,12 +59,6 @@ export async function findBlogPosts(
     "database_id" | "filter_properties"
   > = {}
 ): Promise<FindBlogPostsResponse> {
-  if (typeof window !== "undefined") {
-    console.log("findBlogPost(): window: ", window);
-  } else {
-    console.log("findBlogPost(): no window");
-  }
-
   const notion = getNotionClient();
 
   try {
@@ -255,13 +249,9 @@ function getDatabaseId(): string {
     return process.env.NOTION_DATABASE_ID_FOR_BLOG_POSTS;
   }
 
-  console.error(
+  throw new Error(
     "NOTION_DATABASE_ID_FOR_BLOG_POSTS environment variable is required"
   );
-  return "";
-  // throw new Error(
-  //   "NOTION_DATABASE_ID_FOR_BLOG_POSTS environment variable is required"
-  // );
 }
 
 interface ListBlockInfo {
