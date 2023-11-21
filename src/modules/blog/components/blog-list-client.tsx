@@ -43,12 +43,14 @@ export default function BlogListClient({
             <div className="rounded-2xl flex flex-col gap-4 bg-slate-50 hover:bg-white shadow-lg shadow-gray-300/30 hover:-translate-y-2 transition-all hover:shadow-green-300/30">
               {post.coverImageUrl && (
                 <div className="w-full min-h-[250px] relative rounded-tl-2xl rounded-tr-2xl overflow-hidden">
-                  <Image
-                    src={post.coverImageUrl}
-                    alt={post.title}
-                    fill
-                    className="object-cover"
-                  />
+                  <Link href={post.url}>
+                    <Image
+                      src={post.coverImageUrl}
+                      alt={post.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </Link>
                 </div>
               )}
               <div
