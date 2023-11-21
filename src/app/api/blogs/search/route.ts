@@ -1,4 +1,4 @@
-import { findBlogPosts } from "@/modules/blog/helpers";
+import { findBlogPosts } from "@/modules/blog/api";
 import { QueryDatabaseParameters } from "@notionhq/client/build/src/api-endpoints";
 import { z } from "zod";
 
@@ -14,7 +14,11 @@ export async function POST(request: Request) {
   try {
     const response = await findBlogPosts(body);
 
-    return Response.json(response);
+    return Response.json(response, {
+      headers: new Headers({
+        "X-Nawawishkid-Cache": response.cacheStatus,
+      }),
+    });
   } catch (e) {
     if (e instanceof Error) {
       return Response.json({ error: e.message }, { status: 500 });

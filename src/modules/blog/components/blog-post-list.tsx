@@ -1,8 +1,8 @@
-import { findBlogPosts } from "../helpers";
 import { Suspense } from "react";
 import { BlogPostQuery } from "../types";
 import BlogListClient from "./blog-list-client";
 import LoadingSkeleton from "./loading-skeleton";
+import { findBlogPosts } from "../api";
 
 type DisplayMode = "row" | "grid";
 interface Props {

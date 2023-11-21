@@ -1,5 +1,4 @@
 import {
-  findOnePostById,
   getTopicBgColor,
   getTopicFgColor,
   notionBlocksToReactNodes,
@@ -10,6 +9,7 @@ import Animatable from "../../../components/animatable";
 import { GetBlockResponse } from "@notionhq/client/build/src/api-endpoints";
 import Link from "next/link";
 import Breadcrumbs from "@/components/breadcrumbs";
+import { findOnePostById } from "@/modules/blog/api";
 
 interface Props {
   params: { slug: string };
@@ -24,7 +24,7 @@ const findPostFromProps = cache(({ params }: Props) => {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   try {
-    const post = await findPostFromProps(props);
+    const { post } = await findPostFromProps(props);
 
     if (!post) {
       return {};
@@ -49,7 +49,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function BlogPost(props: Props) {
-  const post = await findPostFromProps(props);
+  const { post } = await findPostFromProps(props);
   let content: ReactNode;
 
   if (!post) {

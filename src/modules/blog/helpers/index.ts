@@ -1,15 +1,10 @@
-import { Client } from "@notionhq/client";
 import {
   BlockObjectResponse,
   GetBlockResponse,
-  PageObjectResponse,
-  QueryDatabaseParameters,
   RichTextItemResponse,
 } from "@notionhq/client/build/src/api-endpoints";
-import { BlogPost, BlogPostContent, BlogPostTopic } from "../types";
 import { ReactNode, createElement } from "react";
 import CodeBlock from "@/components/code-block";
-import { format, parse, parseISO } from "date-fns";
 
 const notionBgColorHex: Record<string, string> = {
   red: "#ffe2dd",
@@ -36,147 +31,8 @@ const notionFgColorHex: Record<string, string> = {
   yellow: "#ffffffcd",
 };
 
-const getDefaultParams = (): QueryDatabaseParameters => ({
-  database_id: getDatabaseId(),
-  page_size: 10,
-  sorts: [{ property: "Created", direction: "descending" }],
-});
-
-const getNotionClient = () =>
-  new Client({
-    auth: process.env.NOTION_SECRET_KEY,
-  });
-
-export interface FindBlogPostsResponse {
-  posts: BlogPost[];
-  hasMore: boolean;
-  nextCursor: string | null;
-}
-
-export async function findBlogPosts(
-  params: Omit<
-    QueryDatabaseParameters,
-    "database_id" | "filter_properties"
-  > = {}
-): Promise<FindBlogPostsResponse> {
-  const notion = getNotionClient();
-
-  try {
-    const response = await notion.databases.query({
-      ...getDefaultParams(),
-      ...params,
-    });
-    const posts = (response.results as PageObjectResponse[]).map<BlogPost>(
-      (page) => notionPageToBlogPost(page)
-    );
-
-    return {
-      posts,
-      hasMore: response.has_more,
-      nextCursor: response.next_cursor,
-    };
-  } catch (e) {
-    console.error(e);
-
-    return {
-      posts: [],
-      hasMore: false,
-      nextCursor: null,
-    };
-  }
-}
-
-export async function findOnePostById(
-  postId: string
-): Promise<BlogPost | null> {
-  const notion = getNotionClient();
-
-  try {
-    const [notionPageResponse, pageBlocks] = (await Promise.all([
-      notion.pages.retrieve({
-        page_id: postId,
-      }),
-      notion.blocks.children
-        .list({
-          block_id: postId,
-        })
-        .then((res) => res.results as BlockObjectResponse[]),
-    ])) as [PageObjectResponse, BlockObjectResponse[]];
-
-    return notionPageToBlogPost(notionPageResponse, pageBlocks);
-  } catch (e) {
-    console.error(e);
-
-    return null;
-  }
-}
-
 export const getTopicBgColor = (color: string) => notionBgColorHex[color];
 export const getTopicFgColor = (color: string) => notionFgColorHex[color];
-
-function notionPageToBlogPost(
-  page: PageObjectResponse,
-  content?: BlogPostContent
-): BlogPost {
-  let title: string = "",
-    description: string = "",
-    coverImageUrl: string | undefined = undefined,
-    path = new URL(page.url).pathname,
-    topics: BlogPostTopic[] = [],
-    createdAt = "";
-
-  const titleProperty = page.properties["Title"];
-
-  if (titleProperty.type === "title" && titleProperty.title.length > 0) {
-    title = titleProperty.title[0].plain_text;
-  }
-
-  if (page.cover) {
-    if (page.cover.type === "external") {
-      coverImageUrl = page.cover.external.url;
-    } else if (page.cover.type === "file") {
-      coverImageUrl = page.cover.file.url;
-    } else {
-      coverImageUrl = "";
-    }
-  }
-
-  const topicsProperty = page.properties["Topics"];
-
-  if (topicsProperty.type === "multi_select") {
-    topics = topicsProperty.multi_select.map((topic) => ({
-      ...topic,
-      url: `/blogs?tag=${encodeURIComponent(topic.name)}`,
-    }));
-  }
-
-  const descriptionProperty = page.properties["Description"];
-
-  if (descriptionProperty.type === "rich_text") {
-    description = descriptionProperty.rich_text
-      .map((richText) => richText.plain_text)
-      .join("");
-  }
-
-  const createdAtProperty = page.properties["Created"];
-
-  if (createdAtProperty.type === "created_time") {
-    createdAt = format(
-      parseISO(createdAtProperty.created_time),
-      "MMMM dd, yyyy"
-    );
-  }
-
-  return {
-    title,
-    coverImageUrl,
-    description,
-    url: `/blogs${path}`,
-    topics,
-    content,
-    createdAt,
-  };
-}
 
 export const notionRichTextToReactNode = (
   richText: RichTextItemResponse,
@@ -243,16 +99,6 @@ export const notionRichTextToReactNode = (
 
   return node || plain_text;
 };
-
-function getDatabaseId(): string {
-  if (process.env.NOTION_DATABASE_ID_FOR_BLOG_POSTS) {
-    return process.env.NOTION_DATABASE_ID_FOR_BLOG_POSTS;
-  }
-
-  throw new Error(
-    "NOTION_DATABASE_ID_FOR_BLOG_POSTS environment variable is required"
-  );
-}
 
 interface ListBlockInfo {
   index: number;

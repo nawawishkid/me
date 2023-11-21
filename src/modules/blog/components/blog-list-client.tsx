@@ -4,13 +4,10 @@ import { useState } from "react";
 import { BlogPost, BlogPostQuery } from "../types";
 import Link from "next/link";
 import { ArrowLongRightIcon } from "@heroicons/react/24/outline";
-import {
-  FindBlogPostsResponse,
-  getTopicBgColor,
-  getTopicFgColor,
-} from "../helpers";
+import { getTopicBgColor, getTopicFgColor } from "../helpers";
 import LoadMoreButton from "./load-more-button";
 import LoadingSkeleton from "./loading-skeleton";
+import { FindBlogPostsResponse } from "../api/types";
 
 type DisplayMode = "row" | "grid";
 interface Props {
@@ -117,6 +114,10 @@ export default function BlogListClient({
             onLoaded={(res) => {
               setBlogs((prev) => [...prev, ...res.posts]);
               setNextCursor(res.nextCursor);
+              setIsLoadingMore(false);
+            }}
+            onError={(e) => {
+              console.error(e);
               setIsLoadingMore(false);
             }}
           />
