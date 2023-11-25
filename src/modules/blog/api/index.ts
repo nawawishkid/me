@@ -15,6 +15,7 @@ import { Client } from "@notionhq/client";
 import { BlogPost, BlogPostContent, BlogPostTopic } from "../types";
 import { format, parseISO } from "date-fns";
 import { getRedis } from "./redis";
+import { URL } from "url";
 
 function createFindBlogPostsResponseCacheKey(params: QueryDatabaseParameters) {
   return `findBlogPosts:response:query_${JSON.stringify(params)}`;
@@ -38,10 +39,7 @@ export async function findBlogPosts(
       const cachedResponse = await redis.get(blogsResponseCacheKey);
 
       if (cachedResponse) {
-        console.log(
-          `Successfully got cached ${blogsResponseCacheKey}: `,
-          cachedResponse
-        );
+        console.log(`Successfully got cached ${blogsResponseCacheKey}`);
         return {
           ...JSON.parse(cachedResponse),
           cacheStatus: CacheStatus.HIT,
@@ -56,6 +54,17 @@ export async function findBlogPosts(
     }
 
     const response = await findBlogPostsFromNotion(params);
+    const baseUrl = new URL(
+      process.env.APP_BASE_URL || "http://localhost:3000"
+    );
+
+    response.posts.forEach((post) => {
+      if (post.coverImageUrl) {
+        post.coverImageUrl = `${
+          baseUrl.origin
+        }/api/image?url=${encodeURIComponent(post.coverImageUrl)}`;
+      }
+    });
 
     redis
       .set(
@@ -130,10 +139,7 @@ export async function findOnePostById(
       const cachedResponse = await redis.get(oneBlogResponseCacheKey);
 
       if (cachedResponse) {
-        console.log(
-          `Successfully got cached ${oneBlogResponseCacheKey}: `,
-          cachedResponse
-        );
+        console.log(`Successfully got cached ${oneBlogResponseCacheKey}`);
         return {
           ...JSON.parse(cachedResponse),
           cacheStatus: CacheStatus.HIT,
