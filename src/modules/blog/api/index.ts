@@ -55,7 +55,9 @@ export async function findBlogPosts(
 
     const response = await findBlogPostsFromNotion(params);
     const baseUrl = new URL(
-      process.env.APP_BASE_URL || "http://localhost:3000"
+      process.env.NEXT_PUBLIC_URL
+        ? `https://${process.env.NEXT_PUBLIC_URL}`
+        : "http://localhost:3000"
     );
 
     response.posts.forEach((post) => {

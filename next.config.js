@@ -1,5 +1,7 @@
 const baseUrl = new URL(
-  process.env.NEXT_PUBLIC_VERCEL_URL || "http://localhost:3000"
+  process.env.NEXT_PUBLIC_URL
+    ? `https://${process.env.NEXT_PUBLIC_URL}`
+    : "http://localhost:3000"
 );
 
 /** @type {import('next').NextConfig} */
