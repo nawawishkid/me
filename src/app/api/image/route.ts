@@ -1,51 +1,76 @@
+import { fetchPageCoverImageUrl, getNotionClient } from "@/modules/blog/api";
 import { getRedis } from "@/modules/blog/api/redis";
 import { fileTypeFromBuffer } from "file-type";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   const redis = getRedis();
-  const url = request.nextUrl.searchParams.get("url");
+  const pageId = request.nextUrl.searchParams.get("pageId");
 
-  if (!url) {
-    return Response.json({ error: "url is required" }, { status: 400 });
+  if (!pageId) {
+    return Response.json({ error: "pageId is required" }, { status: 400 });
   }
 
-  const cacheKey = `image:${encodeURIComponent(url)}`;
+  const cacheKey = `image:${pageId}`;
+  const logData: {
+    pageId: string;
+    cacheKey: string;
+    cacheHit?: boolean;
+    notionCoverImageUrl?: string;
+    imageLoaded?: boolean;
+  } = {
+    pageId,
+    cacheKey,
+  };
 
   try {
-    console.log(`Finding the image from cache '${cacheKey}'...`);
-    const result = await redis.get(cacheKey);
+    const result = await redis.getBuffer(cacheKey);
     let buffer: Buffer,
       cacheHit = false;
 
     if (result === null) {
-      console.log(`No cache found for '${cacheKey}', fetching from ${url}...`);
+      logData.cacheHit = false;
 
-      const res = await fetch(url);
+      const coverImageUrl = await fetchPageCoverImageUrl(
+        getNotionClient(),
+        pageId
+      );
+
+      if (!coverImageUrl) {
+        const msg = `Image not found`;
+        console.log(msg, logData);
+
+        return NextResponse.json({ error: msg }, { status: 404 });
+      }
+
+      logData.notionCoverImageUrl = coverImageUrl;
+
+      const res = await fetch(coverImageUrl);
 
       if (res.status !== 200) {
-        const msg = `Failed to fetch image from ${url} with status ${res.status}`;
+        logData.imageLoaded = false;
+        const msg = `Failed to fetch image from ${coverImageUrl} with status ${res.status}`;
 
-        console.error(msg);
+        console.error(msg, logData);
 
         return NextResponse.json({ error: msg }, { status: 502 });
       }
 
+      logData.imageLoaded = true;
+
       const arrBuffer = await res.arrayBuffer();
 
       buffer = Buffer.from(arrBuffer);
-
-      console.log(`Fetched ${url} successfully, caching...`);
 
       redis
         .set(cacheKey, buffer, "EX", 60 * 60 * 24)
         .then(() => console.log(`Successfully cached ${cacheKey}`))
         .catch((e) => console.error(`Failed to cache ${cacheKey}: ${e}`));
     } else {
-      console.log(`Successfully got cached ${cacheKey}`);
+      logData.cacheHit = true;
       // Turn byte string from Redis into a Buffer
       cacheHit = true;
-      buffer = Buffer.from(result);
+      buffer = result;
     }
 
     // Detect mimetype from buffer
@@ -54,7 +79,10 @@ export async function GET(request: NextRequest) {
     if (!type) {
       const msg = `Failed to detect image type`;
 
-      console.log(`${msg}. Deleting from cache... cacheKey=${cacheKey}`);
+      console.log(
+        `${msg}. Deleting from cache... cacheKey=${cacheKey}`,
+        logData
+      );
 
       redis
         .del(cacheKey)
@@ -69,6 +97,8 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({ error: msg }, { status: 500 });
     }
+
+    console.log(`Get image successfully`, logData);
 
     return new NextResponse(buffer, {
       headers: {

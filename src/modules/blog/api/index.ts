@@ -27,21 +27,36 @@ export async function findBlogPosts(
     "database_id" | "filter_properties"
   > = {}
 ): Promise<CachableFindBlogPostsResponse> {
+  const logData: {
+    cacheEnabled: boolean;
+    cacheKey?: string;
+    cacheHit?: boolean;
+    postCount?: number;
+  } = { cacheEnabled: false };
+
   if (process.env.CACHE_NOTION_DATA === "true") {
+    logData.cacheEnabled = true;
     const query = {
       ...getDefaultParams(),
       ...params,
     };
     const blogsResponseCacheKey = createFindBlogPostsResponseCacheKey(query);
+    logData.cacheKey = blogsResponseCacheKey;
     const redis = getRedis();
 
     try {
-      const cachedResponse = await redis.get(blogsResponseCacheKey);
+      const cachedResponseString = await redis.get(blogsResponseCacheKey);
 
-      if (cachedResponse) {
-        console.log(`Successfully got cached ${blogsResponseCacheKey}`);
+      if (cachedResponseString) {
+        const cachedResponse = JSON.parse(
+          cachedResponseString
+        ) as FindBlogPostsResponse;
+        logData.postCount = cachedResponse.posts.length;
+        logData.cacheHit = true;
+        console.log("Get blog posts successfully", logData);
+
         return {
-          ...JSON.parse(cachedResponse),
+          ...cachedResponse,
           cacheStatus: CacheStatus.HIT,
         };
       }
@@ -53,20 +68,11 @@ export async function findBlogPosts(
       }
     }
 
-    const response = await findBlogPostsFromNotion(params);
-    const baseUrl = new URL(
-      process.env.NEXT_PUBLIC_URL
-        ? `https://${process.env.NEXT_PUBLIC_URL}`
-        : "http://localhost:3000"
-    );
+    logData.cacheHit = false;
 
-    response.posts.forEach((post) => {
-      if (post.coverImageUrl) {
-        post.coverImageUrl = `${
-          baseUrl.origin
-        }/api/image?url=${encodeURIComponent(post.coverImageUrl)}`;
-      }
-    });
+    const response = await findBlogPostsFromNotion(params);
+
+    logData.postCount = response.posts.length;
 
     redis
       .set(
@@ -80,10 +86,16 @@ export async function findBlogPosts(
         console.error(`Failed to cache ${blogsResponseCacheKey}: ${e}`)
       );
 
+    console.log("Get blog posts successfully", logData);
+
     return { ...response, cacheStatus: CacheStatus.MISS };
   }
 
   const response = await findBlogPostsFromNotion(params);
+
+  logData.postCount = response.posts.length;
+
+  console.log("Get blog posts successfully", logData);
 
   return { ...response, cacheStatus: CacheStatus.MISS };
 }
@@ -123,6 +135,19 @@ export async function findBlogPostsFromNotion(
       nextCursor: null,
     };
   }
+}
+
+export async function fetchPageCoverImageUrl(
+  notionClient: Client,
+  pageId: string
+) {
+  const page = (await notionClient.pages.retrieve({
+    page_id: pageId,
+  })) as PageObjectResponse;
+
+  return page.cover?.type === "external"
+    ? page.cover.external.url
+    : page.cover?.file.url;
 }
 
 function createFindOnePostByIdResponseCacheKey(id: string) {
@@ -210,10 +235,7 @@ function notionPageToBlogPost(
 ): BlogPost {
   let title: string = "",
     description: string = "",
-    coverImageUrl =
-      page.cover?.type === "external"
-        ? page.cover.external.url
-        : page.cover?.file.url,
+    coverImageUrl = `/api/image?pageId=${page.id}`,
     path = new URL(page.url).pathname,
     topics: BlogPostTopic[] = [],
     createdAt = "";
@@ -224,15 +246,15 @@ function notionPageToBlogPost(
     title = titleProperty.title[0].plain_text;
   }
 
-  if (page.cover) {
-    if (page.cover.type === "external") {
-      coverImageUrl = page.cover.external.url;
-    } else if (page.cover.type === "file") {
-      coverImageUrl = page.cover.file.url;
-    } else {
-      coverImageUrl = "";
-    }
-  }
+  // if (page.cover) {
+  //   if (page.cover.type === "external") {
+  //     coverImageUrl = page.cover.external.url;
+  //   } else if (page.cover.type === "file") {
+  //     coverImageUrl = page.cover.file.url;
+  //   } else {
+  //     coverImageUrl = "";
+  //   }
+  // }
 
   const topicsProperty = page.properties["Topics"];
 
@@ -277,7 +299,7 @@ const getDefaultParams = (): QueryDatabaseParameters => ({
   sorts: [{ property: "Created", direction: "descending" }],
 });
 
-const getNotionClient = () =>
+export const getNotionClient = () =>
   new Client({
     auth: process.env.NOTION_SECRET_KEY,
   });
