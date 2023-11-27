@@ -59,8 +59,10 @@ export default function Nav() {
       </button>
       <nav
         className={`${
-          isMenuOpen ? "h-screen" : "h-0"
-        } bg-slate-50 overflow-hidden w-screen fixed top-16 left-0 z-50 md:relative md:inline-block md:top-[unset] md:left-[unset] md:w-[unset] md:h-full md:z-[unset] transition-all duration-500`}
+          isMenuOpen
+            ? "h-screen transition-all duration-500"
+            : "h-0 transition-none duration-[unset]"
+        } bg-slate-50 overflow-hidden w-screen fixed top-[88px] left-0 z-50 md:relative md:inline-block md:top-[unset] md:left-[unset] md:w-[unset] md:h-full md:z-[unset]`}
       >
         <ul className="py-8 flex flex-col items-start text-xl md:text-base md:flex-row md:items-center gap-4 md:p-0 h-full">
           {menus.map((menu) => (
